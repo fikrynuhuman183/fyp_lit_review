@@ -1,0 +1,334 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{caption}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage[numbers,square,sort&compress]{natbib}
+\usepackage{xurl}
+\usepackage[hidelinks]{hyperref}
+
+\graphicspath{{figures/}}
+\setlist{itemsep=2pt, topsep=4pt}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+
+% Visible marker for claims that still need a citation.
+\newcommand{\needsource}[1]{\textcolor{red}{[source needed: #1]}}
+
+\title{Minimum IMU Devices Required and Their Placement for Walking Gait Analysis: A Literature Review}
+\author{M.\,N.\,A. Fikry \and W.\,S.\,S. Perera \and D.\,M.\,E.\,S. Dewagedara\\[4pt]
+  \small CO421 Final Year Project, Faculty of Engineering, University of Peradeniya}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+% =====================================================================
+\section{Introduction}
+\label{sec:intro}
+
+Walking is one of the most informative things a person does every day. Small changes in how someone walks, such as slower steps, shorter strides, or a wider or more variable base, can be early signs of neurological or joint disease, and tracking them over time can show whether a treatment is working. In practice, gait is usually measured in a short, supervised test in a clinic or laboratory. That test shows what a person can do on the day and under observation, which is not always what they do in daily life \citep{carcreff2020}.
+
+Wearable inertial measurement units (IMUs) make it possible to measure gait continuously outside the laboratory. An IMU is small and inexpensive, and records how the body segment it is attached to accelerates and rotates. The difficulty lies in deciding how many IMUs to use and where to place them. More sensors capture more of the body's movement, but they take longer to put on, must be synchronised and calibrated, and are less likely to be worn for days at a time. Fewer sensors are comfortable and practical, but at some point accuracy falls below what is useful. The places people are most willing to wear a sensor, such as the wrist and the lower back, are also the furthest from the feet, where the events that define each step take place.
+
+This review brings together the evidence on that trade-off. It first describes what each body location can and cannot measure, then examines the algorithms that try to extract more information from fewer sensors, and finally considers the conditions under which configurations that work in the laboratory begin to fail: turning, slow or impaired walking, imperfect attachment, carried load, terrain and footwear. Throughout, the \emph{minimum configuration} is defined as the smallest set of IMUs, in number and placement, that achieves a stated accuracy for a specified gait output, population, setting and algorithm, while remaining practical for its intended use. The review asks:
+
+\begin{enumerate}[label=\textbf{Q\arabic*.}]
+  \item How many IMUs are required for each gait output?
+  \item Which placements achieve the required accuracy, and under what conditions?
+  \item Which algorithms reduce hardware requirements, and at what cost?
+  \item What remains unresolved?
+\end{enumerate}
+
+\subsection{Problems with the current evidence}
+\label{sec:problems}
+
+Read as a whole, the literature shows several problems that recur across placements and algorithms. They are listed here and examined in detail in Sections~\ref{sec:placement}--\ref{sec:factors}.
+
+\begin{enumerate}[label=\textbf{P\arabic*.}]
+  \item \textbf{Narrow testing conditions.} Most minimum configurations were established with healthy adults walking straight, on level ground and at a comfortable speed in a laboratory. Turns, stairs, slopes, postural transitions and slow or impaired walking are tested far less often.
+  \item \textbf{Sensor sets chosen in advance.} Multi-sensor studies usually fix their sensor set before data collection and rarely ask which sensors could be removed without losing accuracy, so the true minimum is seldom measured directly.
+  \item \textbf{Convenience works against accuracy.} The placements people are most willing to wear for long periods, the wrist and the lower back, are the least accurate for gait events and spatial measures, and they lose the most accuracy when walking becomes irregular or slow.
+  \item \textbf{Algorithms tested in limited settings.} Learning-based models and cross-location transfer can reduce the number of sensors, but they need large labelled datasets, and most have been tested only on straight walking or checked against the teacher sensor rather than an independent reference.
+  \item \textbf{Real-world factors studied in isolation.} Self-attachment, sensor shift during wear, carried load, terrain and footwear all change the signal, but each has been studied on its own, and their effect on the minimum number of sensors has not been tested.
+  \item \textbf{Results that are hard to compare.} Studies use different reference systems, event-matching windows and accuracy metrics, and group averages can hide large errors on individual strides.
+\end{enumerate}
+
+\subsection{Scope and structure}
+
+The review covers body-worn IMUs during walking, including turns, stairs and transitions. Insole-based systems are mentioned only as reference or comparison devices, and running and upper-limb tasks are excluded. Section~\ref{sec:background} introduces gait outputs, sensing errors and reference standards. Section~\ref{sec:placement} examines configurations by placement, Section~\ref{sec:algorithms} reviews algorithms, Section~\ref{sec:factors} considers movement complexity and real-world conditions, Section~\ref{sec:gaps} sets out the research gaps, and Section~\ref{sec:discussion} discusses the findings.
+
+% =====================================================================
+\section{Background}
+\label{sec:background}
+
+\subsection{Describing walking gait}
+
+A gait cycle comprises a stride, from initial contact of one foot to its next initial contact, divided into stance and swing, with swing beginning at toe-off \citep{perry2010}. Gait outputs impose different sensor requirements:
+
+\begin{itemize}
+  \item \textbf{Temporal:} gait events, stride time, stance and swing duration, cadence, variability and left--right asymmetry.
+  \item \textbf{Spatial:} stride length, walking speed and step width. Placement affects accuracy; shank sensors may suit event detection, while foot sensors may better capture step width and asymmetry \citep{voisard2024}.
+  \item \textbf{Rotational:} joint angles \citep{niswander2020,wang2025l} and three-dimensional segment rotations. The helical axis describes relative segment motion as rotation about an instantaneous axis. Two IMUs on the femur and tibia have been used to identify reduced knee helical-axis variability associated with early osteoarthritis \citep{nishizawa2026}.
+\end{itemize}
+
+Thus, event timing may be estimated with one sensor, whereas direct joint-motion measurement generally requires sensors on both connected segments. Learned models can reduce this requirement, with ankle-angle errors of approximately 4\textdegree{} reported using one heel IMU \citep{wang2025l}.
+
+\subsection{IMU sensing and error sources}
+
+An IMU combines a three-axis accelerometer and gyroscope, sometimes with a magnetometer. It measures acceleration and angular velocity in its own coordinate frame, requiring integration and additional assumptions to estimate position and orientation. Key error sources include:
+
+\begin{itemize}
+  \item \textbf{Drift:} integration errors accumulate over time. Foot-worn sensors use zero-velocity updates during stance; residual distance error can be approximately 1\% \citep{ruizruiz2024}. Fixed stance-detection thresholds may fail during activities such as stair negotiation \citep{wagstaff2020}.
+  \item \textbf{Misalignment:} sensor axes rarely match anatomical axes. Orientation-invariant methods and deep learning can reduce sensitivity to misalignment \citep{guimaraes2021,romijnders2022}.
+  \item \textbf{Attachment position:} different placements can produce similar average stride-length errors but substantially different single-stride errors and variability estimates \citep{kuderle2022}.
+  \item \textbf{Soft-tissue artefact:} skin and muscle movement relative to bone introduces measurement errors; placement over bony landmarks may help \citep{scalera2021,nishizawa2026}.
+  \item \textbf{Synchronisation:} multiple sensors require temporal alignment, achieved through shared computer clocks or hardware pulses \citep{nishizawa2026,anderson2025}.
+\end{itemize}
+
+\subsection{Reference standards and evaluation}
+
+Laboratory references include optical motion capture, force plates and instrumented walkways \citep{romijnders2021,lewin2022,anderson2025}. Although accurate, these systems capture short, controlled assessments rather than everyday performance. Real-world validation therefore requires wearable references; Mobilise-D, for example, validated a lower-back device against a multi-sensor wearable reference during 2.5 hours of daily activity \citep{mico2023}.
+
+Reference labels and evaluation methods also affect reported accuracy. Foot dragging during 180\textdegree{} turns can make stride boundaries ambiguous, requiring manual correction \citep{anderson2025}. Event-matching windows vary from $\pm$16 to $\pm$250\,ms \citep{anderson2025}, while F1 scores can differ depending on whether results are aggregated per test or cross-validation fold \citep{kuderle2024}. Group-level agreement may also conceal individual errors \citep{lewin2023}. Furthermore, stride-time variability measured using waist and ankle IMUs showed fair-to-good reliability (ICC 0.47--0.66), compared with excellent reliability for force plates (ICC 0.90) \citep{rantalainen2020}.
+
+Accordingly, this review reports each minimum configuration alongside its accuracy, reference system and testing conditions to support meaningful comparisons.
+
+% =====================================================================
+\section{Placement-by-Placement Analysis of IMU-Based Gait Assessment}
+\label{sec:placement}
+
+IMU placement influences the gait parameters that can be measured, their accuracy, and the complexity of the required processing algorithms. Although distal, lower-limb, proximal, and wrist placements have demonstrated effectiveness for specific gait outcomes, their performance cannot be directly generalized across different measurements or walking conditions. Therefore, identifying the minimum sensor configuration requires evaluating both anatomical placement and the intended gait parameters.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.7\linewidth]{fig1_placements.jpg}
+  \caption{Common anatomical placement locations for wearable IMUs in gait analysis, illustrating distal, lower-limb, proximal, and upper-extremity configurations.}
+  \label{fig:placements}
+\end{figure}
+
+\subsection{Distal placements: foot and insole}
+
+Foot-mounted IMUs are particularly suitable for gait-event detection and spatiotemporal measurements because they capture movement directly associated with foot contact and swing. \citet{guimaraes2021} proposed an orientation-invariant method for estimating gait parameters using foot-worn inertial sensors. Validation against optical motion capture reported a gait-speed estimation error of $-3.1 \pm 9.2$\,cm/s, reduced in variability to $-3.4 \pm 6.9$\,cm/s when turning strides were excluded. These results demonstrate that orientation-independent processing can reduce dependence on precise sensor alignment, although performance remains affected by complex walking trajectories.
+
+Similarly, \citet{prigent2023} demonstrated that a single foot-mounted IMU could detect walking during free-living activities in 18 participants, achieving 98\% sensitivity and 91\% specificity against a multisensor reference system. However, walking-bout detection does not establish equivalent accuracy for individual gait events or spatial measurements.
+
+In contrast, \citet{loukovitis2021} evaluated the test--retest repeatability of 28 gait variables from IMU-embedded PODOSmart insoles in 22 healthy male participants; because the measuring device is an insole, this evidence lies outside the body-worn scope of this review. Their reported test--retest ICC values ranged from 0.802 to 0.997, demonstrating good-to-excellent repeatability. Unlike \citet{guimaraes2021}, who examined validity against motion capture, this study primarily assessed measurement consistency.
+
+Collectively, these studies support distal placement for walking detection and spatiotemporal assessment. Nevertheless, their different validation objectives prevent a definitive ranking of foot-mounted and insole-integrated IMUs. Furthermore, distal sensors cannot independently capture proximal joint rotations, and spatial estimates remain dependent on drift correction and processing assumptions.
+
+\subsection{Lower-limb placements: shank and thigh}
+
+Shank- and thigh-mounted IMUs provide segment-specific motion information for gait-event detection and lower-limb kinematics. \citet{niswander2020} evaluated 11 sensor locations in seven participants performing the Timed Up and Go test. Comparisons against optical motion capture demonstrated that joint-angle bias and root-mean-square error varied with anatomical placement, target joint, and functional movement. However, the small sample limits generalization across populations and walking conditions.
+
+\citet{kahlon2023} examined acceleration and angular-velocity signals from bilateral shank and thigh IMUs in 30 adolescents under different walking speeds and treadmill/overground conditions. Superior--inferior shank acceleration and mediolateral shank angular velocity demonstrated comparatively stable signal characteristics. However, signal consistency does not necessarily establish joint-angle accuracy.
+
+\citet{salminen2024} evaluated a shank-angular-velocity method using 24,519 strides across nine scenarios, demonstrating accurate detection of several gait events, although heel-rise detection remained less accurate.
+
+Together, these studies indicate that shank placement is promising for gait-event analysis, whereas optimal joint-kinematic placement remains measurement-dependent. They do not establish a universally optimal lower-limb configuration.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.8\linewidth]{fig2_misalignment.jpg}
+  \caption{Conceptual illustration of sensor-to-segment misalignment and attachment movement affecting lower-limb IMU measurements.}
+  \label{fig:misalignment}
+\end{figure}
+
+\subsection{Proximal placements: lower back, waist and chest}
+
+Proximal IMUs are frequently used for global gait assessment because they capture trunk movement and are practical for long-duration monitoring. \citet{rantalainen2020} compared waist- and ankle-mounted IMUs in 27 older adults. Although both locations showed excellent reliability for mean stride duration, waist placement produced higher reliability for stride-duration variability (ICC = 0.66) than ankle placement (ICC = 0.47). This demonstrates that optimal placement depends on the selected gait outcome.
+
+\citet{mico2023} evaluated lower-back IMU algorithms in 108 participants across six healthy and clinical cohorts. Walking-sequence detection, cadence, and initial-contact estimates showed generally strong performance. However, shorter walking bouts, speeds below 0.5\,m/s, and severe gait impairment reduced the accuracy of certain outcomes, particularly stride length.
+
+\citet{lueken2021} investigated pendant-based step-length estimation in ten healthy participants, reporting relative errors below 10\% at walking speeds of 2--4\,km/h. Unlike waist-fixed sensors, pendant motion introduces different mechanical and modeling considerations.
+
+These studies support proximal placements for global mobility measurements but show that accuracy is outcome-, algorithm-, and population-dependent. They provide limited direct evidence for reconstructing independent knee and ankle kinematics.
+
+\subsection{Upper-extremity placement: wrist}
+
+Wrist-mounted IMUs offer convenient long-term monitoring but introduce uncertainty because arm movements are not exclusively associated with walking. \citet{brand2022} evaluated wrist-based gait detection in 30 older adults, including participants with Parkinson's disease. Their deep convolutional neural network achieved AUC values of 0.94 and 0.89 for older-adult and Parkinson's groups, respectively, although precision--recall performance was lower.
+
+\citet{kluge2024} examined 83 participants across six cohorts, reporting wrist-based walking-detection sensitivities of 0.55--0.81, compared with 0.71--0.91 for lower-back algorithms.
+
+Together, these findings indicate that wrist placement supports ambulatory activity detection but generally offers less reliable walking identification than lower-back placement. Its suitability for detailed lower-limb kinematics remains insufficiently demonstrated.
+
+\subsection{Multi-site IMU configurations}
+
+Multi-site configurations combine information from several body segments, enabling assessment of bilateral movement, coordination, and complex gait characteristics. \citet{carcreff2020} employed five synchronized IMUs on the chest, thighs, and shanks in 15 children with cerebral palsy and 14 typically developing children. Comparing laboratory assessments with three days of daily-life monitoring, they identified substantial differences in multiple gait characteristics between controlled and natural environments.
+
+Similarly, \citet{lin2023} employed ten IMUs to distinguish early Parkinson's disease from essential tremor using gait and postural-transition features. Their machine-learning approach achieved 84\% cross-validation accuracy but only 75.8\% accuracy on independent test data, indicating limitations in generalization.
+
+Although these studies demonstrate the value of multisite information, neither systematically establishes whether every sensor is necessary. Additional IMUs also increase synchronization, calibration, attachment, and processing requirements.
+
+\paragraph{Cross-placement synthesis.} The evidence indicates that optimal sensor configurations are parameter-dependent rather than universally defined. Distal sensors support foot events, shank sensors provide useful gait-phase signals, and proximal sensors enable global mobility monitoring. Multi-site systems capture broader movement information, but their additional value over reduced configurations is not consistently quantified (Table~\ref{tab:placement}). Therefore, a remaining research opportunity is to determine the smallest sensor configuration that maintains predefined measurement accuracy across multiple gait parameters, participant groups, and walking conditions.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.75\linewidth]{fig3_configurations.png}
+  \caption{Illustrative IMU configurations for different gait-assessment objectives, highlighting the trade-off between sensor count and available movement information.}
+  \label{fig:configurations}
+\end{figure}
+
+\begin{table}[htbp]
+  \centering
+  \caption{Summary of placement evidence and its implication for the minimum IMU configuration.}
+  \label{tab:placement}
+  \small
+  \begin{tabularx}{\linewidth}{@{}p{2.2cm}YYY@{}}
+    \toprule
+    Placement & Main evidence & Limitations & Minimum-IMU implication \\
+    \midrule
+    Foot/insole & \citet{guimaraes2021}; \citet{prigent2023}: walking detection, spatiotemporal estimates; \citet{loukovitis2021}: repeatability (insole device) & Joint-specific information and spatial drift & One sensor can support some walking outcomes \\
+    \addlinespace
+    Shank/thigh & \citet{niswander2020}; \citet{kahlon2023}; \citet{salminen2024}: joint accuracy, robust signals, gait phases & Placement dependence and joint-specific errors & Minimum depends on gait event versus joint kinematics \\
+    \addlinespace
+    Waist/lower back/chest & \citet{rantalainen2020}; \citet{mico2023}; \citet{lueken2021} (chest pendant): global gait outcomes and clinical monitoring & Slow gait, short bouts, limited joint detail & One sensor supports selected global measurements \\
+    \addlinespace
+    Wrist & \citet{brand2022}; \citet{kluge2024}: long-term walking detection & Confounding arm movements; lower sensitivity & Suitable for detection, not established for detailed joint kinematics \\
+    \addlinespace
+    Multi-site & \citet{carcreff2020}; \citet{lin2023}: multi-domain gait assessment & Complexity; sensor redundancy untested & Sensor reduction requires systematic evaluation \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\subsection{Placement in military benchmark exercises}
+
+Military benchmark exercises, such as loaded marches, load-carriage time trials and agility runs, impose a constraint that clinical studies rarely face: sensors must coexist with boots, body armour and rucksacks. \citet{slattery2024} compared four boot-mounted IMUs and one instrumented insole with treadmill force plates in 19 Australian Army trainees walking at 5.5\,km/h with 23\,kg. All devices showed good-to-excellent agreement for linear stride-time variability (ICC $>$ 0.88), whereas agreement for non-linear measures was lower (ICC 0.57--0.92). The authors chose the boot because it would least affect a soldier's duties. \citet{fain2024b} similarly mounted the distal sensor on footwear because military boots prevent tibial placement, while \citet{feigel2026} strapped two IMUs to the distal tibia over the boots during an outdoor 6.72\,km load-carriage time trial.
+
+Proximal placement was preferred for recognising activity type. \citet{papadakis2023} selected the waist over the arm and thigh because it produced more consistent signals, and a random-forest classifier subsequently reached 92.9\% validation accuracy, and 83.6\% on unseen test participants, for walking, uphill walking, running and jumping in 50 military participants. Where joint kinematics were required, studies relied on multi-segment systems, ranging from a foot, shank, thigh and pelvis set \citep{fain2024a} to a 17-IMU full-body suit \citep{kessels2021}.
+
+These studies suggest that, in military testing, feasible placements are dictated by equipment as much as by accuracy. The boot and distal tibia dominate gait timing, the waist supports activity classification, and kinematic analysis still depends on multi-segment configurations.
+
+% =====================================================================
+\section{Algorithms That Reduce Sensor Needs}
+\label{sec:algorithms}
+
+The minimum IMU configuration required for accurate gait analysis depends just as heavily on algorithmic processing as it does on hardware placement. This section summarizes the classical baseline, then examines three recent algorithmic families that actively lower the sensor requirement: displacement-based segmentation, single-sensor deep learning, and cross-location transfer.
+
+\subsection{Classical baseline}
+
+Classical pipelines detect gait events by identifying peaks or threshold crossings in foot or shank angular velocity \citep{romijnders2021,ruizruiz2024}, or by matching signals against predefined templates and hidden Markov models \citep{kuderle2024}. Once events are detected, foot trajectories are reconstructed using zero-velocity updates during stance \citep{wagstaff2020}. Because these methods rely on characteristic signal shapes and rigid thresholds that fluctuate based on movement intensity, they have mostly been validated on straight-line walking with foot- and shank-worn sensors; where tested, shank peak detection stayed accurate in slalom walking but produced more missed and false events during turning \citep{romijnders2021}.
+
+\subsection{Displacement-based segmentation}
+
+To overcome the fragility of signal-shape thresholds, FoDiGS \citep{ruizruiz2024} replaces heuristic signatures with a deterministic kinematic rule: a step is defined strictly by a significant horizontal displacement of the foot from its previous stationary position. Relying on a zero-velocity-aided trajectory, heel strikes and toe-offs are registered when horizontal displacement crosses a fixed threshold (0.0045\,m).
+
+Ignoring complex multi-axial heel rotations makes FoDiGS highly resilient to dragged steps. Across 3,205 straight-line steps featuring six distinct walking styles, FoDiGS detected 96.9\% of steps, vastly outperforming a gyroscope-peak algorithm (68.4\%) and a commercial system (90.7\%). Its mean relative error for gait parameters was 14.2\%, compared to 19.3\% and 20.1\% for traditional methods. FoDiGS lowers the computational cost of a two-foot configuration by eliminating training data, but it does not reduce the physical sensor count. As its evaluation excluded turns exceeding 20\textdegree{} and utilized a similar displacement-based reference, its robustness during complex, multidirectional movement remains untested.
+
+\subsection{Learning-based estimation from single sensors}
+
+Machine and deep learning models actively reduce both physical sensor counts and manual feature engineering. For gait events, a convolutional network trained on data from a 157-participant cohort detected initial and final contacts from a single ankle or shank IMU in 48 held-out test participants (recall $\geq$ 92\%, precision $\geq$ 97\%), requiring minimal orientation knowledge \citep{romijnders2022}.
+
+However, performance varies by placement. \citet{anderson2025} found that TCNs using lower-limb sensors exceeded an F1-score of 95\% during walking with only 5--10 participants for model development. Wrist-sensor models performed worse even with the full development set of 81 participants (F1 88.4\% for walking and 50.0\% for stationary and transitional movements). Their walking performance was still rising at that point, suggesting that more data would continue to improve them. Spatial parameters and joint kinematics show similar promise: XGBoost applied to a lower-back IMU estimated step length with a 6.08\,cm RMSE \citep{zadka2024}, and a heel-mounted convolutional network estimated ankle angles with a 4.13\textdegree{} RMSE \citep{wang2025l}. The shared limitation across learning-based methods is the immense need for reference-labeled training data, a requirement that is steepest for inherently noisy, comfortable placements like the wrist.
+
+\subsection{Cross-location transfer}
+
+To address the massive training data bottleneck, cross-location transfer leverages an accurate ``teacher'' sensor to supervise a comfortable ``student'' placement during data collection. Early models used rule-based foot labels to train proximal networks. \citet{koroglu2018} thresholded the gyroscope norm of a foot IMU to label stationary phases, using these to train a torso-IMU residual network to 93\% accuracy. More recently, \citet{kolakowski2024} compared four neural networks for translating wrist IMU signals into tibia or shoe signals; U-Net and a CNN autoencoder were most accurate, and in a single 10\,m walk, temporal parameters from CNN-autoencoder-translated signals were close to shoe-sensor values for stride duration (28\,ms difference) but less so for stance and swing (80 and 44\,ms). Algorithm-generated labeling also replaces manual video annotation; \citet{wagstaff2020} trained an LSTM zero-velocity detector using optimized classical detector labels. However, the cross-location studies remain proofs of concept: \citet{koroglu2018} and \citet{kolakowski2024} evaluated against their own teacher sensors rather than independent references (e.g., optical motion capture), and \citet{wagstaff2020}, although validated against independent position ground truth, addressed zero-velocity detection rather than transfer to another body site. Robust event-level transfer to the wrist, independently validated in unseen clinical populations, remains a critical open challenge.
+
+\subsection{Summary}
+
+Ultimately, each algorithmic family mitigates a distinct hardware or data constraint. Displacement-based segmentation eliminates the need for extensive training datasets and subject-specific tuning for foot-mounted sensors. Learning-based methods actively reduce the physical hardware count, enabling a single device at the shank, lower back, or heel to reliably estimate gait events, step length, and joint kinematics. Finally, cross-location transfer, though currently at the proof-of-concept stage, suggests that cumbersome reference sensors are only necessary during data collection to supervise a comfortable, long-term wearable. Whether these algorithmic gains remain robust beyond straight-line laboratory walking is examined in Section~\ref{sec:factors}.
+
+% =====================================================================
+\section{Factors That Change the Minimum}
+\label{sec:factors}
+
+The minimum configurations in Sections~\ref{sec:placement}--\ref{sec:algorithms} were established mainly in healthy adults walking straight at comfortable speed. Outside these conditions, a changed signal does not automatically mean more sensors are needed: algorithms correct poor inference, whereas additional IMUs add physically independent information. A configuration is treated here as sufficient only when its error is small relative to clinically relevant differences, about 0.05--0.10\,m/s for gait speed \citep{perera2006}, although no agreed threshold exists for event timing or step width.
+
+\subsection{Non-cyclical movement}
+\label{sec:noncyclical}
+
+Turns, transitions and gait initiation break the periodic-signal assumptions behind most event detectors. In 121 older adults with and without Parkinson's disease, a foot-mounted temporal convolutional network fell from 99.3\% F1 in straight walking to 96.7\% in 180\textdegree{} turns and 88.4\% in stationary and transitional activity, whereas a wrist model fell from 88.4\% to 72.3\% and 50.0\% \citep{anderson2025}. As complexity rises, placement therefore matters more than count. Algorithm choice also matters: foot strapdown integration outperformed lumbar pendulum models for spatial parameters in straight walking but not during continuous turning \citep{kvist2024}, although algorithm and placement changed together. Conversely, one shank IMU reconstructed per-stride heading change with a median error of 0.7\textdegree{} (IQR $-0.2$ to 1.7\textdegree) \citep{uchitomi2022}, but only in 12 healthy young adults. Transition evidence is thinner: one lumbar IMU detected sit-to-stand and stand-to-sit with 82--85\% accuracy in Parkinson's disease and older adults, but only 47\% with dyskinesia \citep{pham2018}. FoDiGS was validated on forward walking styles \citep{ruizruiz2024}, and none of the reviewed studies compared sensor counts during postural transitions.
+
+\subsection{Pathological and slow walkers}
+
+Pathology alters both gait and its signal, but higher error alone does not justify more hardware. Using two foot-dorsum IMUs, \citet{voisard2024} reported gait-event F1 scores of 100\%, 99.4\% and 96.3\% in healthy, multiple-sclerosis and post-stroke cohorts, with median timing error rising from 8 to 18 and 26\,ms; the patient groups walked at only 0.23--0.28\,m/s. A convolutional model developed on a 157-participant cohort (61 for training) and tested on 48 unseen participants, including Parkinson's, multiple-sclerosis and stroke cohorts, achieved recall $\geq$92\% and precision $\geq$97\% from a single shank or ankle IMU \citep{romijnders2022}, suggesting that representative training can preserve a one-sensor minimum for temporal events. Slow gait strains proximal placements more: lower-back stride-length error fell below 20\% only above 0.5\,m/s \citep{mico2023}. Step width is less forgiving still. Pelvis and bilateral-shank IMUs gave 3.3\,cm MAE during over-ground walking in spinocerebellar ataxia \citep{wang2025h}, and in healthy young men an insole--waist pair gave 40.0\,mm versus 45.4\,mm for the best single insole and 49.7\,mm for the waist, the best single body-worn sensor, without statistical comparison \citep{fukamachi2026}. Both errors approach the $\sim$6\,cm mean difference between ataxic and healthy step width \citep{buckley2018}, so whether any reduced configuration is clinically sufficient remains unresolved.
+
+\subsection{Misplacement and shift}
+
+The placements in Section~\ref{sec:placement} describe anatomical regions, not exact attachments. Across six foot positions in 14 healthy adults, mean stride-length error stayed below 2\,cm, but single-stride errors differed greatly, with heel-sensor outliers near 60\,cm \citep{kuderle2022}. Functional calibration reduced the shank inter-placement RMS difference in angular excursion from 15\textdegree{} to 1.5\textdegree, but gave no significant improvement at the pelvis, could worsen thigh estimates and was assessed between sensors rather than against an optical reference \citep{mihy2026}. Self-placed tibial sensors were also less repeatable than researcher-placed ones (ICC 0.55 versus 0.85) \citep{ruder2022}. A minimum configuration should therefore specify its attachment and calibration protocol, not only its sensor count. Sensor slippage during prolonged wear remains largely unquantified.
+
+\subsection{Load, gradient and duration in military benchmark exercises}
+
+Military benchmark exercises combine factors that clinical studies examine separately. Load alters the signal itself: with a 23\,kg vest, peak foot and pelvis accelerations decreased while signal attenuation between the two sensors increased per step overall, decreasing with load during walking but increasing during running \citep{fain2024b}. Load and gradient also challenge kinematic estimation. A foot, shank, thigh and pelvis IMU set estimated hip and knee range of motion during walking with no significant mean difference from motion capture, although RMSE remained 12.6--18.5\textdegree; it failed during running, and it detected only a grade effect on the knee waveform and missed the other load- and grade-induced changes identified by motion capture \citep{fain2024a}. Duration matters over long events: in 14 military personnel completing a 6.72\,km time trial with 25\,kg rucksacks, the gait-variability exponent DFA-$\alpha$ fell significantly from the first to the final third of the event \citep{feigel2026}. Non-cyclic benchmark tasks extend the deficit described in Section~\ref{sec:noncyclical}. In a 32.5\,m agility run with five flags and five hurdles, adding 15.6 and 31.2\,kg increased completion time from 11.78 to 12.32 and 13.08\,s \citep{kessels2021}, and instrumented turning tasks, including the modified Illinois Agility Test, together discriminated mild traumatic brain injury with high accuracy (AUC 0.92; modified Illinois Agility Test alone, 0.78) in civilian adults \citep{fino2025}. None of these studies compared sensor counts under load, so whether minimum configurations derived from unloaded walking hold during military testing remains unknown.
+
+\subsection{Footwear and walking surface}
+
+Footwear and walking surface change both gait and how a sensor couples to the body, yet each has been tested almost only in isolation. Shoelace-mounted IMUs matched laboratory group-level orthotic effects for most variables but agreed on the direction of individual change in only 40--70\% of participants \citep{lewin2023}. By contrast, one shank IMU measured shank-to-vertical angle within 1\textdegree{} (ICC $>$ 0.9) across heel-wedge conditions \citep{dejong2021}. Footwear sensitivity therefore depends on whether the sensor is coupled to the shoe or to the body, and on the target metric. Shoe parameters beyond orthoses and heel height are largely untested: the only multi-IMU study varying heel and platform height is a three-participant preprint without a reference system \citep{meghapathirana2024}. Surface effects appear parameter-specific. Shank-based event detection stayed accurate in urban outdoor walking \citep{storm2016}, whereas nine event-detection algorithms lost performance on sloped terrains relative to flat ground \citep{trigo2025}. None of the reviewed studies varied footwear, surface and sensor configuration together.
+
+% =====================================================================
+\section{Research Gaps}
+\label{sec:gaps}
+
+Across Sections~\ref{sec:placement}--\ref{sec:factors}, the evidence converges on one overarching gap: none of the reviewed studies determined the smallest set of body-worn IMUs that still measures gait to a stated accuracy across the terrains and tasks people actually encounter. Existing minimum configurations were derived mostly from straight, level walking in the laboratory, and studies fixed their sensor sets in advance rather than testing which sensors could be removed. Closing this gap requires three strands to be addressed together: optimising sensor placement, optimising the algorithms that extract gait from fewer sensors, and accounting for the real-world obstructions that degrade both. Military benchmark exercises, which combine load, gradient, long duration and non-cyclic movement, provide a demanding and standardised test bed for all three.
+
+\subsection{Optimal placement across terrains and tasks}
+
+Placement evidence is parameter-specific: foot and shank sensors give the most accurate gait events, proximal sensors support global mobility measures, and wrist sensors are weakest during complex movement \citep{mico2023,anderson2025}. However, multi-site studies did not test whether every sensor was necessary \citep{carcreff2020,lin2023}, and placements were rarely compared across terrain. In military-oriented studies, the boot and distal tibia were chosen partly because military equipment would rule out other sites \citep{fain2024b,slattery2024}, but no study evaluated whether these sites remain optimal on gradients or during agility tasks. A systematic sensor-reduction study, which starts from a multi-site recording and removes sensors until accuracy falls below a predefined threshold on level ground, slopes, stairs and turns, has yet to be performed.
+
+\subsection{Algorithms that could lower the minimum}
+
+Two algorithmic routes could reduce the number of sensors needed, but both remain incompletely tested. The first is cross-location transfer, in which an accurate foot sensor supervises a more wearable site during data collection only. Foot-derived labels have trained a torso model \citep{koroglu2018}, wrist signals have been translated into shoe signals \citep{kolakowski2024}, and lower-back labels have trained a wrist walking detector \citep{brand2022}. None of these studies transferred knowledge at the level of individual gait events and evaluated the student on unseen participants against an independent reference, even though wrist models were still improving as training data increased \citep{anderson2025}. The second route is displacement-based segmentation. FoDiGS defines a step by horizontal foot displacement and needs no training data, but it was validated only on straight walking, with steps turning more than 20\textdegree{} excluded \citep{ruizruiz2024}, and the zero-velocity detection it depends on fails with fixed thresholds when the motion changes, for example on stairs \citep{wagstaff2020}. Whether either route holds on slopes, stairs and turns, or during the rushes and agility runs of military testing, is unknown.
+
+\subsection{Real-world obstructions}
+
+Laboratory validations rarely include the obstructions present outside the laboratory. External load reduced peak accelerations and changed impact attenuation \citep{fain2024b}, IMUs missed several load- and grade-induced kinematic changes that motion capture detected \citep{fain2024a}, and gait variability shifted over a 6.72\,km load-carriage time trial \citep{feigel2026}. Equipment also constrains attachment: the expected use of military boots led to shoe rather than tibial placement \citep{fain2024b}, sensor position within one segment changed single-stride errors \citep{kuderle2022}, and self-placed sensors were less repeatable than researcher-placed ones \citep{ruder2022}. Slippage under body armour or rucksacks during long marches has not been quantified. Validation is constrained as well: the loaded-march comparison against force plates was performed on a treadmill \citep{slattery2024}, and the outdoor time trial had no gait reference system \citep{feigel2026}.
+
+Together, these strands define the gap this review identifies: a minimum configuration, specified by sensor number, placement, algorithm and attachment protocol, that maintains a predefined accuracy across level walking, gradients, stairs and non-cyclic tasks under real-world conditions. Standardised military benchmark exercises, such as loaded marches over varied terrain and agility runs, offer a repeatable protocol for testing such configurations, provided that validation includes an independent reference and representative military participants.
+
+% =====================================================================
+\section{Discussion}
+\label{sec:discussion}
+
+\subsection{Applied case: military benchmark exercises}
+
+Military personnel are assessed with standardised benchmark exercises such as loaded marches and time trials, agility and obstacle runs, and timed runs. These exercises bundle the conditions that Section~\ref{sec:factors} identified as raising the minimum configuration: external load, gradient, long duration, high speed and non-cyclic movement. They therefore provide a demanding test of the framework used in this review, in which the minimum depends on output, context, population and algorithm. Seven studies of body-worn IMUs during military or military-style tasks were examined for this purpose, and Table~\ref{tab:military} summarises the exercises, the outputs they require and the configurations reported.
+
+\begin{table}[htbp]
+  \centering
+  \caption{Benchmark exercises, required outputs and IMU configurations reported in military studies.}
+  \label{tab:military}
+  \small
+  \begin{tabularx}{\linewidth}{@{}YYYY@{}}
+    \toprule
+    Benchmark exercise & Output needed & Configuration reported & Evidence for a minimum \\
+    \midrule
+    Loaded march (treadmill) & Stride time and its variability & Boot-mounted devices, each compared with force plates \citep{slattery2024} & One boot-mounted device agreed with force plates for linear variability; non-linear measures less consistent \\
+    \addlinespace
+    Load-carriage time trial (outdoor) & Stride time and gait variability & Two distal-tibia IMUs over the boots \citep{feigel2026} & Feasible in the field; no outdoor reference system \\
+    \addlinespace
+    Walking and running under load and grade & Joint range of motion, impact attenuation & Foot, shank, thigh and pelvis \citep{fain2024a}; foot and pelvis \citep{fain2024b} & Adequate for walking range of motion, not for running \\
+    \addlinespace
+    Agility run & Whole-body kinematics, completion time & 17-IMU suit \citep{kessels2021} & No sensor reduction attempted \\
+    \addlinespace
+    Turning and agility tests & Turning speed, segment coordination & Forehead, sternum, lumbar and both feet \citep{fino2025} & Multi-segment; no subset tested \\
+    \addlinespace
+    Activity segmentation & Walk, run and jump classification & One waist sensor \citep{papadakis2023} & One sensor sufficient for activity type \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\paragraph{Placement.} Equipment narrows the options more than in clinical settings. The boot and distal tibia were the preferred sites for gait timing because they least obstruct duties \citep{slattery2024,feigel2026}, and the waist gave the most consistent signals for classifying activity type \citep{papadakis2023}. For cyclic loaded walking, the evidence supports one boot or distal-tibia sensor per limb as a practical minimum for stride timing and linear variability. Non-cyclic tasks such as agility runs and turning courses were studied only with multi-segment systems, so no minimum can yet be stated for them.
+
+\paragraph{Algorithms.} The studies relied mainly on classical methods: an accelerometer-based event detector on the shank for the time trial \citep{feigel2026} and a random-forest classifier for activity recognition \citep{papadakis2023}. Displacement-based segmentation such as FoDiGS, which depends on zero-velocity periods during stance, has not been tested during loaded marching, running or agility tasks, which extends the gap set out in Section~\ref{sec:gaps}. Field protocols already record wrist-worn devices alongside tibial IMUs \citep{feigel2026}, the kind of synchronised data that teacher--student training of a wrist model would require.
+
+\paragraph{Conditions.} Load reduced peak accelerations and changed how impact was attenuated between foot and pelvis \citep{fain2024b}, some load- and gradient-induced changes in joint kinematics were missed by IMUs \citep{fain2024a}, and gait variability changed as the time trial progressed \citep{feigel2026}. A configuration validated at the start of a march, on level ground or without load may therefore not hold at its end.
+
+\paragraph{What remains unknown.} Two of the seven studies tested civilian adults wearing weighted vests rather than soldiers \citep{fain2024a,fain2024b}. No study derived a minimum configuration for any benchmark exercise, each instead using sensors chosen in advance, and the outdoor studies lacked a gait reference system.
+
+\paragraph{Implications for the decision matrix.} For military field testing, a provisional configuration would combine bilateral boot or distal-tibia IMUs for marches, a waist IMU to segment the exercise into its activities, and an additional trunk sensor for turning and agility tasks. Each element still requires validation against a reference system under load.
+
+% =====================================================================
+\bibliographystyle{unsrtnat}
+\bibliography{references}
+
+\end{document}
