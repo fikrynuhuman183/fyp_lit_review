@@ -70,13 +70,13 @@ for Walking Gait Analysis: A Literature Review\par}
 
 \vspace{0.55cm}
 \noindent
-\supervisorblock{Prof. Roshan Godaliyadda}{Dept. of Electrical \& Electronic Eng.}{\texttt{roshang@eng.pdn.ac.lk}}
+\supervisorblock{Roshan Godaliyadda}{Dept. of Electrical \& Electronic Eng.}{\texttt{roshang@eng.pdn.ac.lk}}
 \hfill
-\supervisorblock{Prof. Roshan Ragel}{Department of Computer Engineering\\\textit{Faculty of Engineering}}{\texttt{roshanr@eng.pdn.ac.lk}}
+\supervisorblock{Roshan Ragel}{Department of Computer Engineering\\\textit{Faculty of Engineering}}{\texttt{roshanr@eng.pdn.ac.lk}}
 \hfill
-\supervisorblock{Dr. Asanga Ratnaweera}{Department of Mechanical Engineering\\\textit{Faculty of Engineering}}{\vphantom{\texttt{mpbe@eng.pdn.ac.lk}}}
+\supervisorblock{Asanga Ratnaweera}{Department of Mechanical Engineering\\\textit{Faculty of Engineering}}{\vphantom{\texttt{mpbe@eng.pdn.ac.lk}}}
 \hfill
-\supervisorblock{Prof. Parakrama Ekanayake}{Dept. of Electrical \& Electronic Eng.}{\texttt{mpbe@eng.pdn.ac.lk}}
+\supervisorblock{Parakrama Ekanayake}{Dept. of Electrical \& Electronic Eng.}{\texttt{mpbe@eng.pdn.ac.lk}}
 \vspace{0.55cm}
 \end{center}
 }]
@@ -117,7 +117,7 @@ Read as a whole, the literature shows several problems that recur across placeme
 
 \subsection{Scope and structure}
 
-The review covers body-worn IMUs during walking, including turns, stairs and transitions. Insole-based systems are mentioned only as reference or comparison devices, and running and upper-limb tasks are excluded. Studies were drawn from peer-reviewed experimental work published between 2020 and 2026, supplemented by foundational gait-analysis and algorithm studies where no recent equivalent exists. Primary sources were organised by gait output, sensor placement, IMU count, algorithm, participant group, walking task, validation reference and reported accuracy metric. Instrumented insoles and pressure-only systems were treated as comparison devices rather than qualifying body-worn IMU configurations. For each result, the synthesis distinguishes measurement \emph{capability}---a configuration was shown to estimate an output---from a verified \emph{minimum}, where fewer sensors were directly compared under an explicit accuracy criterion.
+The review covers body-worn IMUs during walking, including turns, stairs and transitions. Insole-based systems are mentioned only as reference or comparison devices, and upper-limb tasks are excluded. Military benchmark exercises, such as loaded marches, load-carriage time trials and agility runs, are included as an applied case. They combine in one standardised task the conditions that most challenge a small sensor set: external load, boots, gradients, long duration and non-cyclic manoeuvres. They therefore show whether configurations established in level walking still hold under demanding conditions (Sections~\ref{sec:placement-military}, \ref{sec:factors-military} and \ref{sec:disc-military}). Running is otherwise outside the scope; running and agility results are reported only where they form part of these military tasks \citep{fain2024a,fain2024b,papadakis2023,kessels2021}. Studies were drawn from peer-reviewed experimental work published between 2020 and 2026, supplemented by foundational gait-analysis and algorithm studies where no recent equivalent exists. Primary sources were organised by gait output, sensor placement, IMU count, algorithm, participant group, walking task, validation reference and reported accuracy metric. Instrumented insoles and pressure-only systems were treated as comparison devices rather than qualifying body-worn IMU configurations. For each result, the synthesis distinguishes measurement \emph{capability}---a configuration was shown to estimate an output---from a verified \emph{minimum}, where fewer sensors were directly compared under an explicit accuracy criterion.
 
 Section~\ref{sec:background} introduces gait outputs, sensing errors and reference standards. Section~\ref{sec:placement} examines configurations by placement, Section~\ref{sec:algorithms} reviews algorithms, Section~\ref{sec:factors} considers movement complexity and real-world conditions, Section~\ref{sec:gaps} sets out the research gaps, Section~\ref{sec:discussion} synthesizes the implications for practice and experimental design, and Section~\ref{sec:conclusion} concludes the review.
 
@@ -267,7 +267,7 @@ Although these studies demonstrate the value of multisite information, neither s
     \toprule
     Placement & Main evidence & Limitations & Minimum-IMU implication \\
     \midrule
-    Foot/insole & \citet{guimaraes2021}; \citet{prigent2023}: walking detection, spatiotemporal estimates; \citet{loukovitis2021}: repeatability (insole device) & Joint-specific information and spatial drift & One sensor can support some walking outcomes \\
+    Foot & \citet{guimaraes2021}; \citet{prigent2023}: walking detection, spatiotemporal estimates & Joint-specific information and spatial drift & One sensor can support some walking outcomes \\
     \addlinespace
     Shank/thigh & \citet{niswander2020}; \citet{kahlon2023}; \citet{salminen2024}: joint accuracy, robust signals, gait phases & Placement dependence and joint-specific errors & Minimum depends on gait event versus joint kinematics \\
     \addlinespace
@@ -302,6 +302,7 @@ Although these studies demonstrate the value of multisite information, neither s
 These examples also distinguish three often-conflated forms of evidence: detection accuracy, continuous-parameter error and repeatability. They are not interchangeable. Similarly, a multi-site study may prove that a rich configuration works without establishing whether one of its devices can be removed. Thus, an output-specific minimization experiment should fix its reference system and metrics before comparing candidate sensor subsets.
 
 \subsection{Placement in military benchmark exercises}
+\label{sec:placement-military}
 
 Military benchmark exercises, such as loaded marches, load-carriage time trials and agility runs, impose a constraint that clinical studies rarely face: sensors must coexist with boots, body armour and rucksacks. \citet{slattery2024} compared four boot-mounted IMUs and one instrumented insole with treadmill force plates in 19 Australian Army trainees walking at 5.5\,km/h with 23\,kg. All devices showed good-to-excellent agreement for linear stride-time variability (ICC $>$ 0.88), whereas agreement for non-linear measures was lower (ICC 0.57--0.92). The authors chose the boot because it would least affect a soldier's duties. \citet{fain2024b} similarly mounted the distal sensor on footwear because military boots prevent tibial placement, while \citet{feigel2026} strapped two IMUs to the distal tibia over the boots during an outdoor 6.72\,km load-carriage time trial.
 
@@ -399,8 +400,9 @@ The placements in Section~\ref{sec:placement} describe anatomical regions, not e
 The attachment comparison in Figure~\ref{fig:attachment} emphasizes that a nominally identical one-sensor configuration can perform differently depending on who mounts it. Protocol robustness therefore belongs in the definition of a deployable minimum, rather than being treated as a minor operational detail.
 
 \subsection{Load, gradient and duration in military benchmark exercises}
+\label{sec:factors-military}
 
-Military benchmark exercises combine factors that clinical studies examine separately. Load alters the signal itself: with a 23\,kg vest, peak foot and pelvis accelerations decreased while signal attenuation between the two sensors increased per step overall, decreasing with load during walking but increasing during running \citep{fain2024b}. Load and gradient also challenge kinematic estimation. A foot, shank, thigh and pelvis IMU set estimated hip and knee range of motion during walking with no significant mean difference from motion capture, although RMSE remained 12.6--18.5\textdegree; it failed during running, and it detected only a grade effect on the knee waveform and missed the other load- and grade-induced changes identified by motion capture \citep{fain2024a}. Duration matters over long events: in 14 military personnel completing a 6.72\,km time trial with 25\,kg rucksacks, the gait-variability exponent DFA-$\alpha$ fell significantly from the first to the final third of the event \citep{feigel2026}. Non-cyclic benchmark tasks extend the deficit described in Section~\ref{sec:noncyclical}. In a 32.5\,m agility run with five flags and five hurdles, adding 15.6 and 31.2\,kg increased completion time from 11.78 to 12.32 and 13.08\,s \citep{kessels2021}, and instrumented turning tasks, including the modified Illinois Agility Test, together discriminated mild traumatic brain injury with high accuracy (AUC 0.92; modified Illinois Agility Test alone, 0.78) in civilian adults \citep{fino2025}. None of these studies compared sensor counts under load, so whether minimum configurations derived from unloaded walking hold during military testing remains unknown.
+Military benchmark exercises combine factors that clinical studies examine separately. Load alters the signal itself. In 20 adults walking and running with a 23\,kg weighted vest, load reduced peak foot and pelvis accelerations. The signal attenuation between the foot and pelvis sensors rose for each step, but fell when summed over a kilometre \citep{fain2024b}. Load and gradient also challenge kinematic estimation. A foot, shank, thigh and pelvis IMU set estimated hip and knee range of motion during walking with no significant mean difference from motion capture, although RMSE remained 12.6--18.5\textdegree; it failed during running, and it detected only a grade effect on the knee waveform and missed the other load- and grade-induced changes identified by motion capture \citep{fain2024a}. Duration matters over long events: in 14 military personnel completing a 6.72\,km time trial with 25\,kg rucksacks, the gait-variability exponent DFA-$\alpha$ fell significantly from the first to the final third of the event \citep{feigel2026}. Non-cyclic benchmark tasks extend the deficit described in Section~\ref{sec:noncyclical}. In a 32.5\,m agility run with five flags and five hurdles, adding 15.6 and 31.2\,kg increased completion time from 11.78 to 12.32 and 13.08\,s in ten participants, although the IMU-based kinematics were analysed for only one of them \citep{kessels2021}, and instrumented turning tasks, including the modified Illinois Agility Test, together discriminated mild traumatic brain injury with high accuracy (AUC 0.92; modified Illinois Agility Test alone, 0.78) in civilian adults \citep{fino2025}. None of these studies compared sensor counts under load, so whether minimum configurations derived from unloaded walking hold during military testing remains unknown.
 
 \subsection{Footwear and walking surface}
 
@@ -536,7 +538,7 @@ Military benchmark exercises combine external load, boots, varied terrain, long 
   Loaded march, treadmill & Stride time variability & Boot IMUs, compared individually with force plates \citep{slattery2024} & Good linear variability agreement; treadmill setting. \\
   Outdoor load-carriage time trial & Stride timing / variability & Two distal-tibia IMUs \citep{feigel2026} & Field feasible; no independent outdoor gait reference. \\
   Load and grade walking & Range of motion, attenuation & Foot/shank/thigh/pelvis or foot/pelvis \citep{fain2024a,fain2024b} & Kinematic changes missed; no sensor reduction study. \\
-  Agility course & Whole-body motion & Seventeen IMUs \citep{kessels2021} & Subsets not tested. \\
+  Agility course & Whole-body motion & Seventeen IMUs \citep{kessels2021} & Ten participants, kinematics analysed for one; subsets not tested. \\
   Turning / agility tasks & Coordination / turning & Head, sternum, lumbar and feet \citep{fino2025} & Multi-site, no reduced set validated. \\
   Activity classification & Walk / uphill / run / jump & One waist IMU \citep{papadakis2023} & Activity type, not detailed gait kinematics. \\
   \bottomrule
