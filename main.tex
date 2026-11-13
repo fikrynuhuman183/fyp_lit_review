@@ -254,7 +254,8 @@ Although these studies demonstrate the value of multisite information, neither s
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=0.75\linewidth]{fig3_configurations.png}
-  \caption{Conceptual comparison of single-, bilateral- and multi-site IMU configurations. Configuration capability does not imply a universally validated sensor minimum.}
+  \caption{Illustrative IMU configurations for different gait-analysis objectives. A single foot-mounted IMU has been used for walking-bout detection \citep{prigent2023}, whereas waist/lower-back IMUs support selected temporal and global gait measurements \citep{mico2023,rantalainen2020}. The configurations are examples of demonstrated capabilities, not universally validated minimum sensor requirements.}
+  
   \label{fig:configurations}
 \end{figure}
 
@@ -366,20 +367,23 @@ Ultimately, each algorithmic family mitigates a distinct hardware or data constr
 
 The smallest configurations reported in Sections~\ref{sec:placement}--\ref{sec:algorithms} were tested mainly in healthy adults walking straight at comfortable speed. Outside these conditions, a changed signal does not automatically mean more sensors are needed: algorithms correct poor inference, whereas additional IMUs add physically independent information. A configuration is treated here as sufficient only when its error is small relative to clinically relevant differences, about 0.05--0.10\,m/s for gait speed \citep{perera2006}, although no agreed threshold exists for event timing or step width.
 
+
 \subsection{Non-cyclical movement}
 \label{sec:noncyclical}
 
-Turns, transitions and gait initiation break the periodic-signal assumptions behind most event detectors. In 121 older adults with and without Parkinson's disease, a foot-mounted temporal convolutional network fell from 99.3\% F1 in straight walking to 96.7\% in 180\textdegree{} turns and 88.4\% in stationary and transitional activity, whereas a wrist model fell from 88.4\% to 72.3\% and 50.0\% \citep{anderson2025}. As complexity rises, placement therefore matters more than count. Algorithm choice also matters: foot strapdown integration outperformed lumbar pendulum models for spatial parameters in straight walking but not during continuous turning \citep{kvist2024}, although algorithm and placement changed together. Conversely, one shank IMU reconstructed per-stride heading change with a median error of 0.7\textdegree{} (IQR $-0.2$ to 1.7\textdegree) \citep{uchitomi2022}, but only in 12 healthy young adults. Transition evidence is thinner: one lumbar IMU detected sit-to-stand and stand-to-sit with 82--85\% accuracy in Parkinson's disease and older adults, but only 47\% with dyskinesia \citep{pham2018}. FoDiGS was validated on forward walking styles \citep{ruizruiz2024}, and direct, outcome-matched comparisons of reduced sensor sets during postural transitions remain limited.
+Turns, transitions, and gait initiation challenge the periodic-signal assumptions underlying many gait-event detectors. In a study of 121 older adults with and without Parkinson's disease, \citet{anderson2025} evaluated single-location temporal convolutional networks across straight walking, 180\textdegree{} turns, and stationary/transitional movements. The published abstract identifies the dorsal foot as the highest-performing sensor location, with F1 scores of 99.3\%, 96.7\%, and 88.4\%, respectively, and the wrist as the lowest-performing location, with corresponding scores of 88.4\%, 72.3\%, and 50.0\%. These values represent the highest and lowest location-specific performances across the tested sensor sites, rather than cross-study comparisons. The results show that sensor placement and movement complexity jointly influence stride-segmentation performance. However, they do not establish that increasing the number of IMUs would resolve these limitations.
 
+Algorithm choice also matters. Foot strapdown integration outperformed lumbar pendulum models for spatial parameters during straight walking but not during continuous turning \citep{kvist2024}, although both algorithm and placement changed simultaneously. Conversely, one shank IMU reconstructed per-stride heading change with a median error of 0.7\textdegree{} (IQR $-0.2$ to 1.7\textdegree{}) \citep{uchitomi2022}, but only in 12 healthy young adults. Evidence for postural transitions remains limited: one lumbar IMU detected sit-to-stand and stand-to-sit movements with 82--85\% accuracy in Parkinson's disease and older adults, but only 47\% in participants with dyskinesia \citep{pham2018}. FoDiGS was validated on forward walking styles \citep{ruizruiz2024}, while direct, outcome-matched comparisons of reduced sensor configurations during postural transitions remain limited.
 
 \begin{figure}[htbp]
- \centering
- \includegraphics[width=0.96\linewidth]{fig5_foot_wrist_f1.pdf}
- \caption{Foot- versus wrist-mounted IMU stride-segmentation F1 across straight walking, 180\textdegree{} turns and transitional/stationary movements, using values reported within the same study \citep{anderson2025}.}
- \label{fig:foot-wrist}
+	\centering
+	\includegraphics[width=0.96\linewidth]{fig5_foot_wrist_f1.pdf}
+	\caption{Stride-segmentation F1 scores of the highest-performing dorsal-foot and lowest-performing wrist sensor locations across walking, 180\textdegree{} turns, and stationary/transitional movements. Values reported by \citet{anderson2025}. This is a sensor-placement comparison, not a sensor-count comparison.}
+	\label{fig:foot-wrist}
 \end{figure}
 
-Figure~\ref{fig:foot-wrist} provides a direct within-study comparison: foot-based F1 remains higher across all three tasks, and the wrist model suffers the larger decline under transitions. The result supports testing placement and task jointly; it does not, by itself, show that adding sensors would fix wrist performance.
+Figure~\ref{fig:foot-wrist} illustrates the differences in performance between the dorsal-foot and wrist locations. The dorsal-foot sensor achieved higher F1 scores across all three movement conditions, with the largest difference observed during stationary/transitional movements (88.4\% versus 50.0\%). This comparison highlights the importance of evaluating sensor placement under different movement conditions. However, because each result was obtained using a single-location model, the findings cannot determine whether adding sensors would improve performance.
+
 
 \subsection{Pathological and slow walkers}
 
